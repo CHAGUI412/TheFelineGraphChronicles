@@ -7,6 +7,7 @@ import io.mission4.Mission4Parser;
 import samples.SampleInputs;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -20,22 +21,24 @@ public final class Mission4Panel extends JPanel {
     private final JTextArea outputArea = new JTextArea();
     private final MstCanvas mstCanvas = new MstCanvas();
 
+    private final JComboBox<String> caseSelector = new JComboBox<>(new String[]{
+            "Caso oficial: árbol de 4 nodos",
+            "Ejemplo: red desconectada",
+            "Ejemplo: red más grande"
+    });
+
     public Mission4Panel() {
         super(new BorderLayout());
         outputArea.setEditable(false);
         outputArea.setRows(8);
 
-        JButton loadSampleButton = new JButton("Cargar ejemplo");
-        loadSampleButton.addActionListener(e -> {
-            inputArea.setText(SampleInputs.MISSION_4);
-            solve();
-        });
+        caseSelector.addActionListener(e -> loadSelectedCase());
 
         JButton solveButton = new JButton("Resolver");
         solveButton.addActionListener(e -> solve());
 
         JPanel buttonsPanel = new JPanel();
-        buttonsPanel.add(loadSampleButton);
+        buttonsPanel.add(caseSelector);
         buttonsPanel.add(solveButton);
 
         JPanel leftPanel = new JPanel(new BorderLayout());
@@ -50,6 +53,16 @@ public final class Mission4Panel extends JPanel {
         mainSplit.setResizeWeight(0.4);
 
         add(mainSplit, BorderLayout.CENTER);
+    }
+
+    private void loadSelectedCase() {
+        String text = switch (caseSelector.getSelectedIndex()) {
+            case 1 -> SampleInputs.MISSION_4_DISCONNECTED;
+            case 2 -> SampleInputs.MISSION_4_BIGGER;
+            default -> SampleInputs.MISSION_4;
+        };
+        inputArea.setText(text);
+        solve();
     }
 
     private void solve() {

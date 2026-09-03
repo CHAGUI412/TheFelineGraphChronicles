@@ -8,6 +8,11 @@ import java.util.List;
 
 /**
  * Busca el camino MÁS CORTO en el mapa (BFS = Breadth-First Search).
+ *
+ * Complejidad: O(R*C) en tiempo y espacio (R=filas, C=columnas) --
+ * cada casilla se visita como máximo una vez. Es el algoritmo correcto
+ * para esta misión porque el mapa no tiene pesos (cada paso cuesta
+ * siempre 1), y BFS garantiza el camino más corto justo en ese caso.
  */
 public final class BfsSolver {
 

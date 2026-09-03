@@ -12,6 +12,11 @@ import java.util.List;
  * "¿cuál es la mejor ruta desde UN origen fijo hacia todos los demás
  * nodos?" -- por eso su resultado para el destino D debe coincidir
  * siempre con lo que dice Floyd-Warshall (si no coinciden, algo está mal).
+ *
+ * Complejidad: O(N*M) en tiempo (N=nodos, M=conexiones), O(N) en
+ * espacio. Se usa aquí, además, porque su técnica de "una ronda extra
+ * de relajación" es la forma estándar de detectar ciclos de ganancia
+ * positiva -- cosa que Floyd-Warshall detecta distinto (con d[k][k]).
  */
 public final class BellmanFordSolver {
 

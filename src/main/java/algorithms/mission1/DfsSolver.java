@@ -8,7 +8,13 @@ import java.util.List;
 
 /**
  * Busca UN camino válido (no necesariamente el más corto). DFS = Depth-First Search.
+ *
+ * Complejidad: O(R*C) en tiempo y espacio -- igual que BFS, cada
+ * casilla se visita como máximo una vez. Se implementó de forma
+ * iterativa (pila explícita, no recursión) porque tableros de hasta
+ * 1000x1000 desbordarían el stack de llamadas de Java.
  */
+
 public final class DfsSolver {
 
     private static final int[] DR = {-1, 1, 0, 0};

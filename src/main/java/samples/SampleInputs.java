@@ -96,4 +96,57 @@ public final class SampleInputs {
             4 1 40
             1 3 15
             """;
+    public static final String MISSION_3_CASE_1 = """
+            1
+            5 7 0 4
+            0 1 50
+            0 2 10
+            1 2 -30
+            1 3 40
+            2 1 -5
+            2 3 60
+            3 4 20
+            """;
+
+    public static final String MISSION_3_CASE_2 = """
+            1
+            4 4 0 3
+            0 1 20
+            1 2 30
+            2 1 -10
+            2 3 15
+            """;
+
+    public static final String MISSION_3_CASE_3 = """
+            1
+            3 3 0 2
+            0 1 -40
+            1 2 -25
+            0 2 -80
+            """;
+
+    public static final String MISSION_4_DISCONNECTED = """
+            1
+            5
+            3
+            1 2 5
+            2 3 8
+            4 5 3
+            """;
+
+    public static final String MISSION_4_BIGGER = """
+            1
+            6
+            10
+            1 2 4
+            2 3 8
+            3 4 7
+            4 5 9
+            5 6 10
+            6 1 2
+            1 3 11
+            3 5 14
+            2 6 8
+            1 2 6
+            """;
 }

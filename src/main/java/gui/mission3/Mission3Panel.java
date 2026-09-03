@@ -9,6 +9,7 @@ import io.mission3.Mission3Parser;
 import samples.SampleInputs;
 
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -24,22 +25,24 @@ public final class Mission3Panel extends JPanel {
     private final GraphCanvas3 graphCanvas = new GraphCanvas3();
     private final MatrixPanel matrixPanel = new MatrixPanel();
 
+    private final JComboBox<String> caseSelector = new JComboBox<>(new String[]{
+            "Caso 1: ganancia finita",
+            "Caso 2: ciclo infinito",
+            "Caso 3: resultado negativo"
+    });
+
     public Mission3Panel() {
         super(new BorderLayout());
         outputArea.setEditable(false);
         outputArea.setRows(8);
 
-        JButton loadSampleButton = new JButton("Cargar ejemplo");
-        loadSampleButton.addActionListener(e -> {
-            inputArea.setText(SampleInputs.MISSION_3);
-            solve();
-        });
+        caseSelector.addActionListener(e -> loadSelectedCase());
 
         JButton solveButton = new JButton("Resolver");
         solveButton.addActionListener(e -> solve());
 
         JPanel buttonsPanel = new JPanel();
-        buttonsPanel.add(loadSampleButton);
+        buttonsPanel.add(caseSelector);
         buttonsPanel.add(solveButton);
 
         JPanel leftPanel = new JPanel(new BorderLayout());
@@ -58,6 +61,16 @@ public final class Mission3Panel extends JPanel {
         mainSplit.setResizeWeight(0.4);
 
         add(mainSplit, BorderLayout.CENTER);
+    }
+
+    private void loadSelectedCase() {
+        String text = switch (caseSelector.getSelectedIndex()) {
+            case 1 -> SampleInputs.MISSION_3_CASE_2;
+            case 2 -> SampleInputs.MISSION_3_CASE_3;
+            default -> SampleInputs.MISSION_3_CASE_1;
+        };
+        inputArea.setText(text);
+        solve();
     }
 
     private void solve() {

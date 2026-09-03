@@ -9,6 +9,11 @@ import java.util.Arrays;
  * La idea en una frase: por cada nodo del mapa, nos preguntamos "¿me
  * conviene hacer escala aquí para mejorar alguna ruta?" -- y repetimos
  * esa pregunta para todos los nodos, uno por uno.
+ *
+ * Complejidad: O(N^3) en tiempo (el triple for), O(N^2) en espacio
+ * (la matriz). Es la elección correcta cuando se necesita la respuesta
+ * para TODOS los pares a la vez (como exige la matriz de la GUI), a
+ * diferencia de Bellman-Ford, que solo resuelve desde un origen fijo.
  */
 public final class FloydWarshallSolver {
 

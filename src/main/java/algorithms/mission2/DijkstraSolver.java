@@ -8,9 +8,12 @@ import java.util.PriorityQueue;
 
 /**
  * Dijkstra con cola de prioridad, tal como exige el enunciado.
- * Funciona porque los pesos son siempre no-negativos -- si hubiera
- * pesos negativos, un nodo "cerrado" podría dejar de ser el óptimo
- * después de todo, y el algoritmo daría una respuesta incorrecta.
+ *
+ * Complejidad: O((N + C) log N) con la cola de prioridad basada en
+ * heap (N=nodos, C=conexiones). Es el algoritmo correcto aquí porque
+ * los pesos son siempre no-negativos -- si hubiera pesos negativos,
+ * un nodo ya "cerrado" podría dejar de ser el óptimo después de todo,
+ * y el algoritmo daría una respuesta incorrecta.
  */
 public final class DijkstraSolver {
 
