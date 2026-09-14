@@ -24,6 +24,12 @@ public final class Mission4Parser {
         int testCaseCount = scanner.nextInt();
         for (int t = 0; t < testCaseCount; t++) {
             int nodeCount = scanner.nextInt();
+            // NUEVO: sin esto, un N negativo o cero tira un error de Java
+            // ilegible ("-5" a secas) al construir el UnionFind más adelante.
+            if (nodeCount <= 0) {
+                throw new IllegalArgumentException(
+                        "El número de intersecciones debe ser positivo (se recibió N=" + nodeCount + ")");
+            }
             int edgeCount = scanner.nextInt();
 
             List<Edge> edges = new ArrayList<>();

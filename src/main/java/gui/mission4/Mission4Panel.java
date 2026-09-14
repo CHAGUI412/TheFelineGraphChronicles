@@ -2,17 +2,21 @@ package gui.mission4;
 
 import algorithms.mission4.KruskalSolver;
 import algorithms.mission4.MstResult;
+import gui.theme.CardPanel;
+import gui.theme.FelineTheme;
+import gui.theme.RoundedButton;
 import io.mission4.Mission4OutputFormatter;
 import io.mission4.Mission4Parser;
 import samples.SampleInputs;
 
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
+import javax.swing.border.EmptyBorder;
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.util.List;
 
 public final class Mission4Panel extends JPanel {
@@ -28,29 +32,42 @@ public final class Mission4Panel extends JPanel {
     });
 
     public Mission4Panel() {
-        super(new BorderLayout());
+        super(new BorderLayout(10, 10));
+        FelineTheme.stylePanel(this);
+        setBorder(new EmptyBorder(12, 12, 12, 12));
+
         outputArea.setEditable(false);
         outputArea.setRows(8);
+        FelineTheme.styleTextArea(inputArea);
+        FelineTheme.styleTextArea(outputArea);
+        FelineTheme.styleComboBox(caseSelector);
 
         caseSelector.addActionListener(e -> loadSelectedCase());
 
-        JButton solveButton = new JButton("Resolver");
+        RoundedButton solveButton = new RoundedButton("Resolver");
         solveButton.addActionListener(e -> solve());
 
-        JPanel buttonsPanel = new JPanel();
+        JPanel buttonsPanel = new CardPanel();
+        buttonsPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 12, 12));
         buttonsPanel.add(caseSelector);
         buttonsPanel.add(solveButton);
 
-        JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.add(new JScrollPane(inputArea), BorderLayout.CENTER);
+        JScrollPane inputScroll = new JScrollPane(inputArea);
+        FelineTheme.styleScrollPane(inputScroll);
+        JPanel leftPanel = new JPanel(new BorderLayout(0, 10));
+        FelineTheme.stylePanel(leftPanel);
+        leftPanel.add(inputScroll, BorderLayout.CENTER);
         leftPanel.add(buttonsPanel, BorderLayout.SOUTH);
 
-        JSplitPane rightSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-                new JScrollPane(outputArea), mstCanvas);
+        JScrollPane outputScroll = new JScrollPane(outputArea);
+        FelineTheme.styleScrollPane(outputScroll);
+        JSplitPane rightSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, outputScroll, mstCanvas);
         rightSplit.setResizeWeight(0.3);
+        rightSplit.setBorder(null);
 
         JSplitPane mainSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, rightSplit);
         mainSplit.setResizeWeight(0.4);
+        mainSplit.setBorder(null);
 
         add(mainSplit, BorderLayout.CENTER);
     }
@@ -90,6 +107,7 @@ public final class Mission4Panel extends JPanel {
 
             if (lastCase != null) {
                 mstCanvas.showResult(lastCase.nodeCount(), lastCase.candidateEdges(), lastResult);
+                mstCanvas.animateHeroesAlongTree();
             }
         } catch (Exception e) {
             outputArea.setText("Error al leer el input: " + e.getMessage());

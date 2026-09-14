@@ -2,8 +2,8 @@
 
 ## Herramientas usadas y para qué partes
 
-Se usó Claude (Anthropic) durante todo el desarrollo con el fin de resolver dudas,
-tener mas organización en el proyecto y apoyarnos para hacer la interfaz gráfica y los tests.
+Se usó Claude (Anthropic) durante todo el desarrollo del proyecto con el fin de resolver dudas,
+tener mejor organización y apoyarnos para hacer la interfaz gráfica, los tests y manejar los errores.
 
 ## 2-3 prompts decisivos
 

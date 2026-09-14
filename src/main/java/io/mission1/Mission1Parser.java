@@ -26,6 +26,12 @@ public final class Mission1Parser {
             if (rows == 0 && cols == 0) {
                 break; // caso final, no se procesa
             }
+            // NUEVO: sin esto, un R o C negativo tira un error de Java
+            // ilegible ("-5" a secas) en vez de un mensaje claro.
+            if (rows < 0 || cols < 0) {
+                throw new IllegalArgumentException(
+                        "El tablero debe tener dimensiones positivas (se recibió R=" + rows + ", C=" + cols + ")");
+            }
 
             Board board = new Board(rows, cols);
             int bombRows = scanner.nextInt();

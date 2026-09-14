@@ -2,10 +2,13 @@ package gui.mission4;
 
 import algorithms.mission4.Edge;
 import algorithms.mission4.MstResult;
+import gui.theme.CatSprites;
 import gui.theme.FelineTheme;
 
 import javax.swing.JPanel;
+import javax.swing.Timer;
 import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -16,31 +19,82 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Dibuja la red de la Misión 4: todas las conexiones candidatas en
- * gris, y los cables que forman el MST resaltados en verde-teal.
- * Respeta el límite de 100 intersecciones / 300 cables de la Sección 2.3.
+ * Dibuja la red de la Misión 4. Pola y Minerva recorren, juntas, cada
+ * cable del árbol final -- en el mismo orden en que Kruskal los fue
+ * seleccionando (del más barato al más caro), como si lo estuvieran
+ * reparando en ese orden.
  */
 public final class MstCanvas extends JPanel {
 
     private static final int MAX_NODES = 100;
     private static final int MAX_EDGES = 300;
     private static final int NODE_RADIUS = 16;
+    private static final int TOTAL_ANIMATION_MS = 3000;
+    private static final int TIMER_TICK_MS = 30;
+    private static final int AVATAR_OFFSET = 9;
 
     private int nodeCount;
     private List<Edge> candidateEdges = List.of();
     private MstResult result;
     private boolean hasResult;
 
+    private int[] xs;
+    private int[] ys;
+
+    private boolean heroesAnimating;
+    private int edgeIndex;
+    private float progress;
+    private Timer animationTimer;
+
     public MstCanvas() {
         setBackground(FelineTheme.BACKGROUND);
     }
 
     public void showResult(int nodeCount, List<Edge> candidateEdges, MstResult result) {
+        if (animationTimer != null) {
+            animationTimer.stop();
+        }
         this.nodeCount = nodeCount;
         this.candidateEdges = candidateEdges;
         this.result = result;
         this.hasResult = true;
+        this.heroesAnimating = false;
         repaint();
+    }
+
+    /** Anima a Pola y Minerva recorriendo, juntas, cada cable del árbol final, en orden. */
+    public void animateHeroesAlongTree() {
+        if (animationTimer != null && animationTimer.isRunning()) {
+            animationTimer.stop();
+        }
+        if (!hasResult || !result.connected() || result.mstEdges().isEmpty() || xs == null) {
+            heroesAnimating = false;
+            return;
+        }
+
+        edgeIndex = 0;
+        progress = 0f;
+        heroesAnimating = true;
+
+        int edgeCount = result.mstEdges().size();
+        int segmentDurationMs = Math.max(TIMER_TICK_MS, TOTAL_ANIMATION_MS / edgeCount);
+        float progressPerTick = (float) TIMER_TICK_MS / segmentDurationMs;
+
+        animationTimer = new Timer(TIMER_TICK_MS, e -> {
+            progress += progressPerTick;
+            if (progress >= 1f) {
+                progress = 0f;
+                edgeIndex++;
+                if (edgeIndex >= edgeCount) {
+                    heroesAnimating = false;
+                    animationTimer.stop();
+                    repaint();
+                    return;
+                }
+            }
+            repaint();
+        });
+        animationTimer.start();
     }
 
     @Override
@@ -60,8 +114,8 @@ public final class MstCanvas extends JPanel {
         }
 
         int n = nodeCount;
-        int[] xs = new int[n];
-        int[] ys = new int[n];
+        xs = new int[n];
+        ys = new int[n];
         int cx = getWidth() / 2;
         int cy = getHeight() / 2;
         int radius = Math.max(40, Math.min(getWidth(), getHeight()) / 2 - 40);
@@ -83,27 +137,77 @@ public final class MstCanvas extends JPanel {
             g2.drawLine(xs[edge.a()], ys[edge.a()], xs[edge.b()], ys[edge.b()]);
 
             if (inMst) {
-                int midX = (xs[edge.a()] + xs[edge.b()]) / 2;
-                int midY = (ys[edge.a()] + ys[edge.b()]) / 2;
-                g2.setColor(FelineTheme.TEXT);
-                g2.setFont(new Font("SansSerif", Font.PLAIN, 11));
-                g2.drawString(String.valueOf(edge.cost()), midX, midY);
+                drawWeightLabel(g2, xs[edge.a()], ys[edge.a()], xs[edge.b()], ys[edge.b()], edge.cost());
             }
         }
         g2.setStroke(new BasicStroke(1f));
 
         for (int i = 0; i < n; i++) {
-            g2.setColor(result.connected() ? FelineTheme.ACCENT_HERO : FelineTheme.SURFACE);
+            g2.setColor(result.connected() ? FelineTheme.ACCENT_HERO : FelineTheme.ACCENT_VILLAIN);
             g2.fillOval(xs[i] - NODE_RADIUS, ys[i] - NODE_RADIUS, NODE_RADIUS * 2, NODE_RADIUS * 2);
             g2.setColor(FelineTheme.GRID_LINE);
             g2.drawOval(xs[i] - NODE_RADIUS, ys[i] - NODE_RADIUS, NODE_RADIUS * 2, NODE_RADIUS * 2);
 
-            String label = String.valueOf(i + 1); // mostramos 1-indexado, como el input original
+            String label = String.valueOf(i + 1);
             g2.setColor(FelineTheme.TEXT);
             g2.setFont(new Font("SansSerif", Font.BOLD, 11));
             FontMetrics fm = g2.getFontMetrics();
             g2.drawString(label, xs[i] - fm.stringWidth(label) / 2, ys[i] + fm.getAscent() / 2 - 2);
         }
+
+        if (!result.connected()) {
+            drawCenteredMessage(g2, "Limón cortó demasiados cables");
+        }
+
+        // Pola y Minerva, juntas, sobre el cable actual del recorrido.
+        if (heroesAnimating && edgeIndex < result.mstEdges().size()) {
+            Edge current = result.mstEdges().get(edgeIndex);
+            int ax = xs[current.a()];
+            int ay = ys[current.a()];
+            int bx = xs[current.b()];
+            int by = ys[current.b()];
+            int midX = (int) (ax + (bx - ax) * progress);
+            int midY = (int) (ay + (by - ay) * progress);
+
+            double dx = bx - ax;
+            double dy = by - ay;
+            double len = Math.sqrt(dx * dx + dy * dy);
+            int offsetX = 0;
+            int offsetY = 0;
+            if (len > 0) {
+                offsetX = (int) (-dy / len * AVATAR_OFFSET);
+                offsetY = (int) (dx / len * AVATAR_OFFSET);
+            }
+
+            CatSprites.drawAvatar(g2, CatSprites.Character.POLA,
+                    midX + offsetX, midY + offsetY, NODE_RADIUS * 2 - 6);
+            CatSprites.drawAvatar(g2, CatSprites.Character.MINERVA,
+                    midX - offsetX, midY - offsetY, NODE_RADIUS * 2 - 6);
+        }
+    }
+
+    private void drawWeightLabel(Graphics2D g2, int x1, int y1, int x2, int y2, long cost) {
+        int midX = (x1 + x2) / 2;
+        int midY = (y1 + y2) / 2;
+        double dx = x2 - x1;
+        double dy = y2 - y1;
+        double len = Math.sqrt(dx * dx + dy * dy);
+        int labelX = midX;
+        int labelY = midY;
+        if (len > 0) {
+            int offset = 10;
+            labelX = midX + (int) (-dy / len * offset);
+            labelY = midY + (int) (dx / len * offset);
+        }
+        String text = String.valueOf(cost);
+        g2.setFont(new Font("SansSerif", Font.PLAIN, 11));
+        FontMetrics fm = g2.getFontMetrics();
+        int textWidth = fm.stringWidth(text);
+        int textHeight = fm.getHeight();
+        g2.setColor(FelineTheme.BACKGROUND);
+        g2.fillRoundRect(labelX - textWidth / 2 - 3, labelY - textHeight / 2 - 1, textWidth + 6, textHeight + 2, 6, 6);
+        g2.setColor(FelineTheme.TEXT);
+        g2.drawString(text, labelX - textWidth / 2, labelY + fm.getAscent() / 2 - 2);
     }
 
     private long edgeKey(int a, int b) {

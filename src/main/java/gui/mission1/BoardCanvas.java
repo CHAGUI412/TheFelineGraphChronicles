@@ -2,9 +2,11 @@ package gui.mission1;
 
 import algorithms.mission1.Board;
 import algorithms.mission1.Point;
+import gui.theme.CatSprites;
 import gui.theme.FelineTheme;
 
 import javax.swing.JPanel;
+import javax.swing.Timer;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -16,13 +18,14 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Dibuja el tablero de la Misión 1: bombas (rojo, "X"), inicio ("S",
- * dorado) y el camino resaltado (verde-teal), respetando el límite de
- * 50x50 de la Sección 2.3 -- por encima solo muestra un mensaje.
+ * Dibuja el tablero de la Misión 1, con Pola animada recorriendo el
+ * camino resaltado (Sección 3 del pedido del profesor).
  */
 public final class BoardCanvas extends JPanel {
 
     private static final int MAX_DRAWABLE_SIZE = 50;
+    private static final int TOTAL_ANIMATION_MS = 2500;
+    private static final int TIMER_TICK_MS = 30;
 
     private Board board;
     private Point start;
@@ -31,19 +34,52 @@ public final class BoardCanvas extends JPanel {
     private boolean reachable;
     private boolean hasResult;
 
+    private Point catCell;
+    private int catPathIndex;
+    private int cellsPerTick;
+    private Timer animationTimer;
+
     public BoardCanvas() {
         setBackground(FelineTheme.BACKGROUND);
     }
 
-    /** Llamado desde Mission1Panel después de resolver un caso. */
     public void showResult(Board board, Point start, Point destination, List<Point> path, boolean reachable) {
+        if (animationTimer != null) {
+            animationTimer.stop();
+        }
         this.board = board;
         this.start = start;
         this.destination = destination;
         this.path = path;
         this.reachable = reachable;
         this.hasResult = true;
+        this.catCell = null;
         repaint();
+    }
+
+    /** Anima a Pola recorriendo el camino, celda por celda, en ~2.5 segundos totales sin importar el largo del camino. */
+    public void animateCatAlongPath() {
+        if (animationTimer != null && animationTimer.isRunning()) {
+            animationTimer.stop();
+        }
+        if (!hasResult || !reachable || path.isEmpty()) {
+            return;
+        }
+
+        catPathIndex = 0;
+        catCell = path.get(0);
+        int totalTicks = Math.max(1, TOTAL_ANIMATION_MS / TIMER_TICK_MS);
+        cellsPerTick = Math.max(1, path.size() / totalTicks);
+
+        animationTimer = new Timer(TIMER_TICK_MS, e -> {
+            catPathIndex = Math.min(catPathIndex + cellsPerTick, path.size() - 1);
+            catCell = path.get(catPathIndex);
+            repaint();
+            if (catPathIndex >= path.size() - 1) {
+                animationTimer.stop();
+            }
+        });
+        animationTimer.start();
     }
 
     @Override
@@ -64,12 +100,10 @@ public final class BoardCanvas extends JPanel {
 
         int rows = board.rows();
         int cols = board.cols();
-
         int margin = 12;
         int cellSize = Math.max(4, Math.min(
                 (getWidth() - margin * 2) / cols,
                 (getHeight() - margin * 2) / rows));
-
         int offsetX = (getWidth() - cellSize * cols) / 2;
         int offsetY = (getHeight() - cellSize * rows) / 2;
 
@@ -80,7 +114,6 @@ public final class BoardCanvas extends JPanel {
                 int x = offsetX + c * cellSize;
                 int y = offsetY + r * cellSize;
                 Point here = new Point(r, c);
-
                 if (board.isBomb(r, c)) {
                     drawCell(g2, x, y, cellSize, FelineTheme.ACCENT_VILLAIN, "X");
                 } else if (reachable && pathSet.contains(here)) {
@@ -91,8 +124,6 @@ public final class BoardCanvas extends JPanel {
             }
         }
 
-        // Inicio y destino se dibujan al final, encima, para que su
-        // etiqueta nunca quede tapada por el color base de la celda.
         if (start != null) {
             int x = offsetX + start.col() * cellSize;
             int y = offsetY + start.row() * cellSize;
@@ -101,8 +132,15 @@ public final class BoardCanvas extends JPanel {
         if (destination != null) {
             int x = offsetX + destination.col() * cellSize;
             int y = offsetY + destination.row() * cellSize;
-            drawCell(g2, x, y, cellSize,
-                    reachable ? FelineTheme.ACCENT_HERO : FelineTheme.ACCENT_VILLAIN, "N");
+            drawCell(g2, x, y, cellSize, reachable ? FelineTheme.ACCENT_HERO : FelineTheme.ACCENT_VILLAIN, "N");
+        }
+
+        // Avatar animado de Pola, encima de todo lo demás.
+        if (catCell != null) {
+            int cx = offsetX + catCell.col() * cellSize + cellSize / 2;
+            int cy = offsetY + catCell.row() * cellSize + cellSize / 2;
+            int diameter = Math.max(10, (int) (cellSize * 1.4));
+            CatSprites.drawAvatar(g2, CatSprites.Character.POLA, cx, cy, diameter);
         }
     }
 
@@ -111,7 +149,6 @@ public final class BoardCanvas extends JPanel {
         g2.fillRect(x, y, size, size);
         g2.setColor(FelineTheme.GRID_LINE);
         g2.drawRect(x, y, size, size);
-
         if (label != null && size >= 12) {
             g2.setColor(FelineTheme.TEXT);
             g2.setFont(new Font("SansSerif", Font.BOLD, Math.max(9, size / 2)));
